@@ -1,0 +1,36 @@
+// Event delegation for reply buttons
+document.addEventListener('click', (event) => {
+    if (event.target.classList.contains('reply-button')) {
+        const commentId = event.target.getAttribute('data-comment-id');
+        const replyBox = document.getElementById(`reply-box-${commentId}`);
+        if (replyBox.innerHTML === '') {
+            replyBox.innerHTML = `
+                <textarea class="reply-text" placeholder="Write a reply..."></textarea>
+                <button class="submit-reply" data-comment-id="${commentId}">Submit Reply</button>
+            `;
+        }
+    } else if (event.target.classList.contains('submit-reply')) {
+        const commentId = event.target.getAttribute('data-comment-id');
+        const replyText = event.target.previousElementSibling.value;
+        if (!replyText) return;
+
+        submitReply(commentId, replyText);
+    }
+});
+
+// Function to submit a reply
+async function submitReply(commentId, replyText) {
+    try {
+        const response = await fetch(`/api/comments/${commentId}/replies`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text: replyText })
+        });
+        const reply = await response.json();
+        fetchComments();
+    } catch (error) {
+        console.error('Error submitting reply:', error);
+    }
+}
